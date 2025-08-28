@@ -96,6 +96,6 @@ App will run on 👉 `http://localhost:3000`
 ## 📌 Deliverables
 
 - [GitHub Repository](https://github.com/ahsan-31/book-catalog)\
-- [Live Deployed Link (Vercel)](https://your-app-name.vercel.app)
+- [Live Deployed Link (Vercel)](https://book-catalog-ahsan31.vercel.app/)
 
 ---
