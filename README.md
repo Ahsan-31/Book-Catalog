@@ -44,7 +44,7 @@ cd book-catalog
 npm install
 ```
 
-### 3. Create a `.env.local` file
+### 3. Create a `.env` file
 
 Inside the project root, create a file called `.env.local` with the
 following:
