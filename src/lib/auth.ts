@@ -25,25 +25,36 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
 
-        if (!user || !user.password) {
+          if (!user || !user.password) {
+            return null;
+          }
+
+          // Additional check to ensure email exists (since DB might allow null)
+          if (!user.email) {
+            return null;
+          }
+
+          const isValid = await compare(credentials.password, user.password);
+          if (!isValid) {
+            return null;
+          }
+
+          // Return user object that matches your NextAuth User type
+          return {
+            id: user.id,
+            email: user.email, // TypeScript now knows this is string, not string | null
+            name: user.name,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error("Authorization error:", error);
           return null;
         }
-
-        const isValid = await compare(credentials.password, user.password);
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
       },
     }),
   ],
@@ -54,21 +65,28 @@ export const authOptions: AuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.image = user.image;
+    async jwt({ token, user, account }) {
+      // When user signs in for the first time
+      if (user && account) {
+        return {
+          ...token,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-        session.user.image = token.image as string;
+      // Make sure all required fields are present
+      if (token && token.id && token.email) {
+        session.user = {
+          id: token.id as string,
+          email: token.email as string,
+          name: token.name as string | null,
+          image: token.image as string | null,
+        };
       }
       return session;
     },
